@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HARSHA REDDY // DATA OPS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     TECH-NOIR / "Batcomputer" portfolio
+     Deep black · gunmetal · gold rim-light · cyan console glow · crimson alert
+     ============================================================ */
+  :root{
+    --black:#050506; --carbon:#0a0c0f; --gun:#12161c; --panel:#161b22;
+    --line:#262e38; --line-2:#323c48;
+    --gold:#ffb020; --gold-hi:#ffce5c;
+    --cyan:#33e6e6; --cyan-dim:#1c8a8a;
+    --crimson:#e22424; --crimson-hi:#ff4d4d;
+    --fog:#8a96a3; --bone:#e8eaed;
+    --disp:"Rajdhani",system-ui,sans-serif;
+    --mono:"Share Tech Mono",ui-monospace,monospace;
+    --body:"Inter",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--black);color:var(--bone);font-family:var(--body);font-size:16px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  ::selection{background:var(--gold);color:#000;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-track{background:var(--carbon);}
+  ::-webkit-scrollbar-thumb{background:var(--line-2);}
+  ::-webkit-scrollbar-thumb:hover{background:var(--gold);}
+
+  /* ---------- atmosphere overlays ---------- */
+  .fx{position:fixed;inset:0;pointer-events:none;z-index:80;}
+  .scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0,rgba(0,0,0,0) 2px,rgba(0,0,0,.16) 3px,rgba(0,0,0,0) 4px);opacity:.5;}
+  .vig{background:radial-gradient(130% 100% at 50% 30%,transparent 50%,rgba(0,0,0,.72) 100%);}
+  .grain{opacity:.045;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  @media (prefers-reduced-motion:no-preference){.grain{animation:gr .4s steps(2) infinite;}@keyframes gr{50%{transform:translate(3px,-2px);}}}
+  .gridbg{position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:56px 56px;opacity:.10;-webkit-mask-image:radial-gradient(circle at 50% 35%,#000 0,transparent 80%);mask-image:radial-gradient(circle at 50% 35%,#000 0,transparent 80%);}
+  @media (prefers-reduced-motion:no-preference){.gridbg{animation:drift 30s linear infinite;}@keyframes drift{to{background-position:56px 56px,56px 56px;}}}
+
+  /* ---------- boot sequence ---------- */
+  #boot{position:fixed;inset:0;background:var(--black);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;font-family:var(--mono);color:var(--cyan);font-size:14px;transition:opacity .6s ease;}
+  #boot.done{opacity:0;pointer-events:none;}
+  #bootlog{width:min(560px,80vw);min-height:160px;}
+  #bootlog .l{opacity:0;}
+  #bootlog .l.show{opacity:1;}
+  #bootlog .ok{color:var(--gold);}
+  .boot-bar{width:min(560px,80vw);height:3px;background:var(--gun);margin-top:18px;overflow:hidden;}
+  .boot-bar i{display:block;height:100%;width:0;background:var(--gold);box-shadow:0 0 12px var(--gold);}
+
+  /* ============================================================
+     HUD nav
+     ============================================================ */
+  .hud{position:fixed;top:0;left:0;right:0;z-index:90;display:flex;align-items:center;justify-content:space-between;padding:14px 4vw;background:linear-gradient(180deg,rgba(5,5,6,.92),rgba(5,5,6,.4));backdrop-filter:blur(6px);border-bottom:1px solid var(--line);}
+  .brand{display:flex;align-items:center;gap:14px;}
+  .crest{width:40px;height:44px;position:relative;background:var(--gold);clip-path:polygon(50% 0,100% 22%,100% 78%,50% 100%,0 78%,0 22%);display:flex;align-items:center;justify-content:center;}
+  .crest span{font-family:var(--disp);font-weight:700;color:#000;font-size:18px;letter-spacing:-1px;}
+  .crest::after{content:"";position:absolute;inset:3px;border:1px solid rgba(0,0,0,.35);clip-path:polygon(50% 0,100% 22%,100% 78%,50% 100%,0 78%,0 22%);}
+  .brand .who b{font-family:var(--disp);font-weight:700;letter-spacing:.18em;font-size:16px;display:block;line-height:1;}
+  .brand .who small{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--cyan);}
+  .brand .who small::before{content:"● ";color:var(--gold);}
+  .navlinks{display:flex;gap:6px;}
+  .navlink{font-family:var(--disp);font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:13px;color:var(--fog);padding:9px 16px;position:relative;transition:color .2s ease;}
+  .navlink:hover{color:var(--bone);}
+  .navlink.active{color:var(--gold);}
+  .navlink.active::after{content:"";position:absolute;left:14px;right:14px;bottom:2px;height:2px;background:var(--gold);box-shadow:0 0 10px var(--gold);}
+  .navlink.alert{color:var(--crimson);}
+  .menu-btn{display:none;font-size:24px;color:var(--gold);}
+  @media (max-width:860px){.navlinks{position:fixed;inset:64px 0 auto 0;flex-direction:column;background:var(--carbon);border-bottom:1px solid var(--line);padding:8px 4vw;gap:0;display:none;}.navlinks.open{display:flex;}.navlink{padding:14px 4px;border-bottom:1px solid var(--line);}.menu-btn{display:block;}}
+
+  /* ============================================================
+     Views
+     ============================================================ */
+  .view{display:none;}
+  .view.active{display:block;animation:viewin .5s ease;}
+  @keyframes viewin{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 4vw;position:relative;z-index:1;}
+
+  /* angular panel + HUD corners */
+  .panel{position:relative;background:linear-gradient(145deg,var(--panel),var(--gun));border:1px solid var(--line);}
+  .panel.clip{clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px));}
+  .corner::before,.corner::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--gold);}
+  .corner::before{top:-1px;left:-1px;border-right:none;border-bottom:none;}
+  .corner::after{bottom:-1px;right:-1px;border-left:none;border-top:none;}
+
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);display:flex;align-items:center;gap:10px;}
+  .kicker::before{content:"";width:28px;height:1px;background:var(--cyan);}
+  .sec-title{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:clamp(28px,4.5vw,52px);line-height:1;margin:14px 0 0;}
+  .sec-title .g{color:var(--gold);}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);}
+  .reveal.in{opacity:1;transform:none;}
+
+  /* ---------- HERO ---------- */
+  .hero{min-height:100vh;display:flex;align-items:center;padding-top:64px;position:relative;}
+  .hero-inner{position:relative;z-index:1;}
+  .hero .tag{font-family:var(--mono);font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:18px;}
+  .hero .tag .b{color:var(--gold);}
+  .glitch{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(54px,13vw,168px);line-height:.84;letter-spacing:-.01em;position:relative;color:var(--bone);}
+  .glitch[data-t]::before,.glitch[data-t]::after{content:attr(data-t);position:absolute;left:0;top:0;width:100%;clip-path:inset(0);}
+  .glitch[data-t]::before{color:var(--crimson);}
+  .glitch[data-t]::after{color:var(--cyan);}
+  @media (prefers-reduced-motion:no-preference){
+    .glitch[data-t]::before{animation:gl1 3.6s infinite steps(2);}
+    .glitch[data-t]::after{animation:gl2 3.6s infinite steps(2);}
+    @keyframes gl1{0%,90%,100%{opacity:0;transform:none;}92%{opacity:.7;transform:translate(-3px,1px);}96%{opacity:.5;transform:translate(2px,-1px);}}
+    @keyframes gl2{0%,90%,100%{opacity:0;transform:none;}93%{opacity:.7;transform:translate(3px,-1px);}97%{opacity:.5;transform:translate(-2px,1px);}}
+  }
+  .hero .role{font-family:var(--disp);font-weight:500;letter-spacing:.22em;text-transform:uppercase;font-size:clamp(15px,2.4vw,24px);color:var(--gold);margin-top:26px;}
+  .hero .blurb{color:var(--fog);max-width:560px;margin-top:18px;}
+  .hero-cta{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap;}
+  .btn{font-family:var(--disp);font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:14px;padding:15px 30px;transition:transform .15s ease,box-shadow .3s ease,background .2s ease;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);}
+  .btn-gold{background:var(--gold);color:#000;}
+  .btn-gold:hover{background:var(--gold-hi);transform:translateY(-2px);box-shadow:0 12px 36px rgba(255,176,32,.35);}
+  .btn-line{border:1px solid var(--line-2);color:var(--bone);}
+  .btn-line:hover{border-color:var(--cyan);color:var(--cyan);}
+
+  /* ticker */
+  .ticker{position:absolute;bottom:0;left:0;right:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;background:rgba(10,12,15,.6);}
+  .ticker .run{display:inline-flex;white-space:nowrap;font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--fog);padding:11px 0;gap:42px;}
+  .ticker .run b{color:var(--gold);}
+  .ticker .run .c{color:var(--cyan);}
+  @media (prefers-reduced-motion:no-preference){.ticker .run{animation:tick 26s linear infinite;}@keyframes tick{to{transform:translateX(-50%);}}}
+
+  /* ---------- section spacing ---------- */
+  .sec{padding:120px 0;}
+  .sec-hd{margin-bottom:48px;}
+
+  /* stats */
+  .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .stat{padding:30px 22px;}
+  .stat .n{font-family:var(--disp);font-weight:700;font-size:clamp(32px,4.4vw,50px);line-height:1;color:var(--bone);}
+  .stat .n em{color:var(--gold);font-style:normal;}
+  .stat .l{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--fog);margin-top:12px;}
+  @media (max-width:760px){.statgrid{grid-template-columns:repeat(2,1fr);}}
+
+  /* dossier */
+  .lede{font-size:clamp(19px,2.4vw,27px);font-weight:500;line-height:1.45;max-width:900px;}
+  .lede .g{color:var(--gold);}
+  .entry{display:grid;grid-template-columns:200px 1fr;gap:36px;padding:34px;margin-top:18px;}
+  .entry .meta .y{font-family:var(--disp);font-weight:700;font-size:22px;color:var(--gold);}
+  .entry .meta .loc{font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--fog);margin-top:6px;}
+  .entry .meta .id{font-family:var(--mono);font-size:10px;color:var(--cyan-dim);margin-top:14px;}
+  .entry .co{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:22px;}
+  .entry .ro{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);margin:4px 0 16px;}
+  .entry ul{list-style:none;margin:0;padding:0;}
+  .entry li{color:var(--fog);padding-left:22px;position:relative;margin-bottom:9px;font-size:15px;}
+  .entry li::before{content:"▸";position:absolute;left:0;color:var(--gold);}
+  .entry li b{color:var(--bone);}
+  @media (max-width:760px){.entry{grid-template-columns:1fr;gap:14px;padding:24px;}}
+
+  /* arsenal */
+  .arsenal{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+  .mod{padding:26px;}
+  .mod .h{font-family:var(--disp);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:15px;color:var(--gold);margin-bottom:6px;}
+  .mod .hx{font-family:var(--mono);font-size:10px;color:var(--cyan-dim);letter-spacing:.1em;margin-bottom:16px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{font-family:var(--mono);font-size:12px;color:var(--bone);border:1px solid var(--line-2);padding:6px 11px;transition:all .2s ease;}
+  .chip:hover{border-color:var(--gold);color:var(--gold);background:rgba(255,176,32,.06);}
+
+  /* ops / projects */
+  .ops{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .op{padding:28px;min-height:230px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .35s ease;cursor:pointer;}
+  .op:hover{transform:translateY(-6px);}
+  .op:hover .corner::before,.op:hover .corner::after{border-color:var(--cyan);}
+  .op .k{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--crimson);}
+  .op h3{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:24px;margin:16px 0 10px;}
+  .op p{color:var(--fog);font-size:14px;margin:0;}
+  @media (max-width:860px){.ops{grid-template-columns:1fr;}}
+
+  /* signal */
+  .signal{text-align:center;padding:150px 4vw;position:relative;}
+  .signal .beam{position:absolute;left:50%;top:-5%;width:2px;height:55%;transform-origin:top center;z-index:0;}
+  .signal .beam i{position:absolute;left:-150px;top:0;width:300px;height:100%;background:linear-gradient(180deg,rgba(255,176,32,.2),transparent 78%);clip-path:polygon(48% 0,52% 0,100% 100%,0 100%);filter:blur(3px);}
+  @media (prefers-reduced-motion:no-preference){.signal .beam{animation:pan 8s ease-in-out infinite alternate;}@keyframes pan{from{transform:rotate(-11deg);}to{transform:rotate(11deg);}}}
+  .signal h2{position:relative;z-index:1;font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(40px,8vw,104px);line-height:.9;margin:0;}
+  .signal h2 .g{color:var(--gold);}
+  .signal p{position:relative;z-index:1;color:var(--fog);max-width:520px;margin:22px auto 34px;}
+
+  /* ============================================================
+     BLOG view
+     ============================================================ */
+  .blog-top{padding:140px 0 40px;}
+  .blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding-bottom:120px;}
+  .post{padding:0;overflow:hidden;cursor:pointer;transition:transform .35s ease;display:flex;flex-direction:column;}
+  .post:hover{transform:translateY(-6px);}
+  .post:hover .corner::before,.post:hover .corner::after{border-color:var(--cyan);}
+  .post .cover{height:150px;position:relative;display:flex;align-items:flex-end;padding:14px;}
+  .post .cover .tagcat{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;background:rgba(0,0,0,.55);color:var(--gold);padding:4px 10px;border:1px solid var(--gold);}
+  .post .body{padding:22px;flex:1;display:flex;flex-direction:column;}
+  .post h3{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.02em;font-size:21px;line-height:1.05;margin:0 0 10px;}
+  .post .ex{color:var(--fog);font-size:14px;flex:1;}
+  .post .ft{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--cyan-dim);margin-top:18px;display:flex;justify-content:space-between;}
+  .post .ft .read{color:var(--gold);}
+  @media (max-width:980px){.blog-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:680px){.blog-grid{grid-template-columns:1fr;}}
+
+  /* article reader */
+  .article{padding:130px 0 120px;max-width:760px;margin:0 auto;}
+  .article .back{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--cyan);margin-bottom:32px;display:inline-flex;align-items:center;gap:8px;}
+  .article .back:hover{color:var(--gold);}
+  .article .a-cat{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--crimson);}
+  .article h1{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.01em;font-size:clamp(34px,5.5vw,60px);line-height:.98;margin:14px 0 14px;}
+  .article .a-meta{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--fog);border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:36px;}
+  .article .a-body h2{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:26px;color:var(--gold);margin:40px 0 14px;}
+  .article .a-body p{margin:0 0 20px;color:#c5cad1;font-size:17px;line-height:1.75;}
+  .article .a-body code{font-family:var(--mono);font-size:14px;background:var(--gun);border:1px solid var(--line);padding:2px 6px;color:var(--cyan);}
+  .article .a-body pre{font-family:var(--mono);font-size:13px;background:var(--carbon);border:1px solid var(--line);border-left:2px solid var(--gold);padding:18px;overflow-x:auto;margin:0 0 24px;color:var(--bone);line-height:1.6;}
+  .article .a-body ul{color:#c5cad1;padding-left:20px;margin:0 0 22px;}
+  .article .a-body li{margin-bottom:8px;}
+
+  /* footer */
+  footer{border-top:1px solid var(--line);padding:36px 4vw;display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;color:var(--fog);font-family:var(--mono);font-size:12px;letter-spacing:.08em;position:relative;z-index:1;}
+  footer a{color:var(--bone);}footer a:hover{color:var(--gold);}
+  footer .links{display:flex;gap:24px;}
+
+  /* modal + toast */
+  .modal-back{position:fixed;inset:0;background:rgba(2,3,4,.88);display:none;align-items:center;justify-content:center;z-index:300;opacity:0;transition:opacity .25s ease;backdrop-filter:blur(5px);}
+  .modal-back.show{display:flex;opacity:1;}
+  .modal{width:480px;max-width:calc(100vw - 32px);padding:0;transform:translateY(20px);transition:transform .3s cubic-bezier(.16,1,.3,1);}
+  .modal-back.show .modal{transform:none;}
+  .modal-head{padding:22px 26px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .modal-head h3{margin:0;font-family:var(--disp);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:18px;color:var(--gold);}
+  .modal-close{font-size:26px;color:var(--fog);width:34px;height:34px;}.modal-close:hover{color:var(--crimson);}
+  .modal-body{padding:26px;}
+  .field{margin-bottom:20px;}
+  .field label{display:block;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;font-size:11px;color:var(--cyan);margin-bottom:8px;}
+  .field input,.field textarea{width:100%;background:var(--black);border:1px solid var(--line-2);padding:12px 14px;color:var(--bone);font-family:var(--body);font-size:15px;outline:none;transition:border-color .2s ease;}
+  .field input:focus,.field textarea:focus{border-color:var(--gold);}
+  .field textarea{resize:vertical;min-height:100px;}
+  .modal-foot{display:flex;justify-content:flex-end;gap:14px;}
+  .toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(16px);background:var(--gun);border:1px solid var(--gold);color:var(--bone);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;font-size:12px;padding:14px 26px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:400;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;}.reveal{opacity:1;transform:none;}}
+</style>
+</head>
+<body>
+<div class="fx vig"></div>
+<div class="fx scan"></div>
+<div class="fx grain"></div>
+<div class="gridbg"></div>
+
+<!-- ===================== BOOT ===================== -->
+<div id="boot">
+  <div id="bootlog"></div>
+  <div class="boot-bar"><i id="bootfill"></i></div>
+</div>
+
+<!-- ===================== HUD NAV ===================== -->
+<nav class="hud">
+  <a class="brand" href="#" data-view="home">
+    <span class="crest"><span>HR</span></span>
+    <span class="who"><b>HARSHA REDDY</b><small>DATA OPS // ONLINE</small></span>
+  </a>
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <div class="navlinks" id="navlinks">
+    <a class="navlink active" data-view="home">Home</a>
+    <a class="navlink" data-view="home" data-scroll="dossier">Dossier</a>
+    <a class="navlink" data-view="home" data-scroll="arsenal">Arsenal</a>
+    <a class="navlink" data-view="blog">Blog</a>
+    <a class="navlink alert" data-view="home" data-scroll="signal">Contact</a>
+  </div>
+</nav>
+
+<!-- ===================== HOME VIEW ===================== -->
+<main class="view active" id="view-home">
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="tag">CLASSIFIED // OPERATOR FILE <span class="b">#HR-07</span> · CLEARANCE: SENIOR</div>
+      <div class="glitch" data-t="HARSHA">HARSHA</div>
+      <div class="glitch" data-t="REDDY">REDDY</div>
+      <div class="role">Senior Data Engineer — AWS · Databricks · Snowflake</div>
+      <p class="blurb">I take legacy chaos and forge it into governed, real-time lakehouses — built to hold under FDA, HIPAA and PCI-DSS, and to scale when the load comes.</p>
+      <div class="hero-cta">
+        <button class="btn btn-gold" data-view="home" data-scroll="signal">Make Contact</button>
+        <button class="btn btn-line" data-view="blog">Read the Logs</button>
+      </div>
+    </div>
+    <div class="ticker"><div class="run" id="ticker"></div></div>
+  </section>
+
+  <!-- stats -->
+  <section class="sec" style="padding-top:90px">
+    <div class="wrap">
+      <div class="statgrid">
+        <div class="stat panel clip corner reveal"><div class="n"><em>9</em>+</div><div class="l">Years // Engineering</div></div>
+        <div class="stat panel clip corner reveal"><div class="n">8<em>TB</em></div><div class="l">Warehouse // Migrated</div></div>
+        <div class="stat panel clip corner reveal"><div class="n">1.5<em>M</em>+</div><div class="l">Vitals // Daily Stream</div></div>
+        <div class="stat panel clip corner reveal"><div class="n">180<em>+</em></div><div class="l">Researchers // Served</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- dossier -->
+  <section class="sec" id="dossier">
+    <div class="wrap">
+      <div class="sec-hd reveal"><div class="kicker">FILE 01 // The Dossier</div><h2 class="sec-title">Field <span class="g">Record</span></h2></div>
+      <p class="lede reveal">Senior AWS Data Engineer, <span class="g">9+ years</span> across pharma, finance and retail — turning fractured legacy systems into unified, regulated lakehouses that move fast and stay trustworthy.</p>
+
+      <div class="entry panel clip corner reveal">
+        <div class="meta"><div class="y">2024 — NOW</div><div class="loc">Indianapolis, IN</div><div class="id">// OP-ELI-LILLY</div></div>
+        <div>
+          <div class="co">Eli Lilly &amp; Company</div><div class="ro">Senior Data Platform Engineer</div>
+          <ul>
+            <li>Built an AWS S3 medallion lakehouse, migrating <b>12 legacy clinical sources</b> (EDC, LIMS, EHR) — data access cut from 2–3 days to <b>under 2 hours</b> for 180+ researchers.</li>
+            <li>Streamed <b>1.5M+ daily patient vitals</b> via Kinesis + Databricks at 5-min latency, surfacing adverse events <b>85% faster</b>.</li>
+            <li>Delta Lake quality framework with FDA 21 CFR Part 11 validation — escalations down <b>62%</b>; Unity Catalog RBAC across 40+ PHI tables.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry panel clip corner reveal">
+        <div class="meta"><div class="y">2022 — 2024</div><div class="loc">McLean, VA</div><div class="id">// OP-CAP-ONE</div></div>
+        <div>
+          <div class="co">Capital One</div><div class="ro">Senior Data Engineer</div>
+          <ul>
+            <li>Unified mainframe, Oracle CRM &amp; Salesforce into a Redshift customer-360 — cross-sell up <b>23%</b>.</li>
+            <li>Real-time card authorizations at <b>sub-500ms</b>; CI/CD cut production incidents <b>58%</b>; held <b>PCI-DSS Level 1</b>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry panel clip corner reveal">
+        <div class="meta"><div class="y">2019 — 2022</div><div class="loc">Rochester, NY</div><div class="id">// OP-WEGMANS</div></div>
+        <div>
+          <div class="co">Wegmans Food Markets</div><div class="ro">AWS Data Engineer</div>
+          <ul>
+            <li>Migrated <b>8TB</b> SQL Server warehouse to partitioned S3 Parquet — storage <b>−42%</b>, BI <b>3× faster</b>.</li>
+            <li>POS ingestion across <b>108 stores</b> (5h → 90min); demand forecasting over <b>72,000+ SKUs</b>, +28% accuracy.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="entry panel clip corner reveal">
+        <div class="meta"><div class="y">2017 — 2019</div><div class="loc">New York, NY</div><div class="id">// OP-INFOSYS</div></div>
+        <div>
+          <div class="co">Infosys Limited</div><div class="ro">ETL Developer</div>
+          <ul>
+            <li>35+ Informatica workflows, <b>4.5M+ daily records</b> at 98.8% success against a 6 AM SLA.</li>
+            <li>EMR PySpark fraud anomaly jobs — batch 4h → <b>45min</b>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- arsenal -->
+  <section class="sec" id="arsenal">
+    <div class="wrap">
+      <div class="sec-hd reveal"><div class="kicker">FILE 02 // The Arsenal</div><h2 class="sec-title">Loadout <span class="g">&amp; Tools</span></h2></div>
+      <div class="arsenal">
+        <div class="mod panel clip corner reveal"><div class="h">AWS</div><div class="hx">// CORE STACK</div><div class="chips"><span class="chip">S3</span><span class="chip">Glue</span><span class="chip">EMR</span><span class="chip">Lambda</span><span class="chip">Kinesis</span><span class="chip">Redshift</span><span class="chip">Athena</span><span class="chip">Lake Formation</span></div></div>
+        <div class="mod panel clip corner reveal"><div class="h">Lakehouse</div><div class="hx">// BIG DATA</div><div class="chips"><span class="chip">Databricks</span><span class="chip">Delta Lake</span><span class="chip">Unity Catalog</span><span class="chip">Snowflake</span><span class="chip">PySpark</span><span class="chip">Structured Streaming</span><span class="chip">Medallion</span></div></div>
+        <div class="mod panel clip corner reveal"><div class="h">Languages</div><div class="hx">// SYNTAX</div><div class="chips"><span class="chip">Python</span><span class="chip">SQL</span><span class="chip">T-SQL</span><span class="chip">PL/SQL</span><span class="chip">Shell</span></div></div>
+        <div class="mod panel clip corner reveal"><div class="h">DevOps / IaC</div><div class="hx">// AUTOMATION</div><div class="chips"><span class="chip">Terraform</span><span class="chip">CloudFormation</span><span class="chip">CodePipeline</span><span class="chip">Docker</span><span class="chip">Git</span><span class="chip">CI/CD</span></div></div>
+        <div class="mod panel clip corner reveal"><div class="h">Governance</div><div class="hx">// COMPLIANCE</div><div class="chips"><span class="chip">Great Expectations</span><span class="chip">Data Lineage</span><span class="chip">HIPAA</span><span class="chip">PCI-DSS</span><span class="chip">FDA 21 CFR 11</span></div></div>
+        <div class="mod panel clip corner reveal"><div class="h">Warehouse / BI</div><div class="hx">// DELIVERY</div><div class="chips"><span class="chip">Dimensional Modeling</span><span class="chip">SCD 1 &amp; 2</span><span class="chip">QuickSight</span><span class="chip">Tableau</span><span class="chip">Power BI</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ops / featured -->
+  <section class="sec" id="ops">
+    <div class="wrap">
+      <div class="sec-hd reveal"><div class="kicker">FILE 03 // Operations</div><h2 class="sec-title">Featured <span class="g">Ops</span></h2></div>
+      <div class="ops">
+        <div class="op panel clip corner reveal" data-view="blog"><div class="k">Pharma · Real-time</div><div><h3>Clinical Lakehouse</h3><p>S3 medallion + Kinesis streaming for oncology &amp; diabetes trials. 12 sources unified, 1.5M daily vitals.</p></div></div>
+        <div class="op panel clip corner reveal"><div class="k">Finance · Streaming</div><div><h3>Customer 360</h3><p>Redshift unification of mainframe, CRM &amp; Salesforce. Sub-500ms auth, +23% cross-sell.</p></div></div>
+        <div class="op panel clip corner reveal"><div class="k">Side build</div><div><h3>Full-stack Rig</h3><p>Node · Express · Oracle XE — stored procs, triggers, audit logging. This contact form runs on it.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- signal -->
+  <section class="signal" id="signal">
+    <div class="beam"><i></i></div>
+    <div class="kicker reveal" style="justify-content:center">FILE 04 // Transmission</div>
+    <h2 class="reveal">Send a <span class="g">Signal</span></h2>
+    <p class="reveal">A platform to build, a role to fill — light it up. It routes straight to my inbox.</p>
+    <button class="btn btn-gold reveal" id="openConnect">Open Channel</button>
+  </section>
+
+  <footer>
+    <div>© <span id="yr"></span> HARSHA REDDY // SENIOR DATA ENGINEER</div>
+    <div class="links"><a href="mailto:dhreddy07@gmail.com">dhreddy07@gmail.com</a><a href="https://www.linkedin.com/in/reddyharsha07/" target="_blank" rel="noopener">LinkedIn</a></div>
+  </footer>
+</main>
+
+<!-- ===================== BLOG VIEW ===================== -->
+<main class="view" id="view-blog">
+  <section class="blog-top">
+    <div class="wrap">
+      <div class="kicker">DATA LOGS // THE ARCHIVE</div>
+      <h2 class="sec-title">Field <span class="g">Notes</span></h2>
+      <p style="color:var(--fog);max-width:600px;margin-top:14px;">Hard-won notes from the platform trenches. <span style="color:var(--cyan-dim);font-family:var(--mono);font-size:13px;">// served from Oracle BLOG_POSTS once the backend is wired</span></p>
+    </div>
+  </section>
+  <div class="wrap">
+    <div class="blog-grid" id="blogGrid"></div>
+  </div>
+  <footer>
+    <div>© <span class="yr"></span> HARSHA REDDY // DATA LOGS</div>
+    <div class="links"><a data-view="home">← Return to base</a></div>
+  </footer>
+</main>
+
+<!-- ===================== ARTICLE VIEW ===================== -->
+<main class="view" id="view-article">
+  <div class="wrap">
+    <article class="article" id="articleBody"></article>
+  </div>
+  <footer>
+    <div>© <span class="yr"></span> HARSHA REDDY // DATA LOGS</div>
+    <div class="links"><a data-view="blog">← Back to archive</a></div>
+  </footer>
+</main>
+
+<!-- ===================== MODAL + TOAST ===================== -->
+<div class="modal-back" id="modalBack">
+  <div class="modal panel clip corner" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="modal-head"><h3 id="mTitle">Open Channel</h3><button class="modal-close" id="modalClose" aria-label="Close">&times;</button></div>
+    <div class="modal-body">
+      <div class="field"><label for="cName">Identify</label><input id="cName" autocomplete="name" placeholder="Your name" /></div>
+      <div class="field"><label for="cEmail">Return Frequency</label><input id="cEmail" type="email" autocomplete="email" placeholder="you@email.com" /></div>
+      <div class="field"><label for="cMsg">Transmission</label><textarea id="cMsg" placeholder="What are we building?"></textarea></div>
+      <div class="modal-foot"><button class="btn btn-line" id="modalCancel" style="padding:12px 20px">Abort</button><button class="btn btn-gold" id="modalSend" style="padding:12px 26px">Transmit</button></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ---------- Boot sequence ---------- */
+  const bootLines = [
+    "INITIALIZING DATA OPS TERMINAL...",
+    "MOUNTING /lakehouse/s3 ........... <span class='ok'>OK</span>",
+    "AUTH: UNITY CATALOG // RBAC ...... <span class='ok'>OK</span>",
+    "STREAM LINK: KINESIS ............. <span class='ok'>LIVE</span>",
+    "OPERATOR: HARSHA REDDY ........... <span class='ok'>VERIFIED</span>",
+    "SYSTEM ONLINE."
+  ];
+  const blog = document.getElementById('bootlog');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function runBoot(){
+    if (reduced){ document.getElementById('boot').classList.add('done'); document.getElementById('bootfill').style.width='100%'; return; }
+    bootLines.forEach((t,i)=>{ const d=document.createElement('div'); d.className='l'; d.innerHTML='&gt; '+t; blog.appendChild(d);
+      setTimeout(()=>{ d.classList.add('show'); document.getElementById('bootfill').style.width = Math.round((i+1)/bootLines.length*100)+'%'; }, 260*i+200); });
+    setTimeout(()=>document.getElementById('boot').classList.add('done'), 260*bootLines.length+650);
+  }
+  window.addEventListener('load', runBoot);
+
+  /* ---------- Ticker ---------- */
+  const tk = "<b>9+ YRS</b> DATA ENGINEERING <span class='c'>//</span> <b>AWS</b> S3·GLUE·EMR·KINESIS·REDSHIFT <span class='c'>//</span> <b>DATABRICKS</b> DELTA LAKE·UNITY CATALOG <span class='c'>//</span> <b>SNOWFLAKE</b> <span class='c'>//</span> <b>1.5M+</b> DAILY VITALS STREAMED <span class='c'>//</span> <b>HIPAA·PCI-DSS·FDA 21 CFR 11</b> <span class='c'>//</span> ";
+  document.getElementById('ticker').innerHTML = tk + tk;
+
+  /* ---------- Year ---------- */
+  const y = new Date().getFullYear();
+  document.getElementById('yr').textContent = y;
+  document.querySelectorAll('.yr').forEach(e=>e.textContent=y);
+
+  /* ---------- Blog data: defaults shown instantly; live posts replace them ---------- */
+  let POSTS = [
+    { id:'spark', cat:'Spark · Performance', title:'Tuning Spark: Partitions, Skew & Shuffle', read:'6 min', date:'2025.05.18',
+      cover:'linear-gradient(135deg,#ffb020,#7a4d00)',
+      excerpt:'Your job isn’t slow because Spark is slow. It’s slow because of how the data is shaped. Here’s where to look first.',
+      body:`<p>When a Spark job drags, the instinct is to throw more executors at it. Resist that. Most slow jobs are slow for one of three reasons, and none of them are fixed by more hardware.</p>
+      <h2>1. Partition count</h2>
+      <p>Too few partitions and you can’t use the cluster; too many and you drown in task-scheduling overhead. A useful target is 2–4× your total core count, with partitions sized around 128MB. Check what you actually have with <code>df.rdd.getNumPartitions()</code> and reshape with <code>repartition()</code> for a shuffle-backed even spread, or <code>coalesce()</code> to shrink without one.</p>
+      <h2>2. Data skew</h2>
+      <p>One key holding 80% of the rows will pin a single task while the rest sit idle. You’ll see it as one straggler task in the Spark UI taking minutes while siblings finish in seconds. Salting the hot key — appending a random suffix before the join, then aggregating back — spreads the load:</p>
+      <pre>df = df.withColumn("salt", (rand()*10).cast("int"))
+joined = df.join(dim, ["key","salt"])  # then re-aggregate</pre>
+      <h2>3. The shuffle</h2>
+      <p>Wide transformations (joins, groupBy, distinct) move data across the network — the single most expensive thing Spark does. Broadcast the small side of a join when it fits in memory (<code>broadcast(dim)</code>), filter <em>before</em> you shuffle, and prefer <code>reduceByKey</code> over <code>groupByKey</code> so aggregation happens map-side.</p>
+      <p>Fix the data shape first. The hardware was never the problem.</p>` },
+
+    { id:'stream', cat:'Architecture · Streaming', title:'Stream vs Batch: When Real-Time Earns Its Keep', read:'5 min', date:'2025.04.02',
+      cover:'linear-gradient(135deg,#33e6e6,#0a4a4a)',
+      excerpt:'Real-time is seductive and expensive. Most “real-time” requirements are actually “fresh-enough” requirements. Know the difference.',
+      body:`<p>Streaming carries permanent operational cost: always-on infrastructure, harder debugging, exactly-once headaches, and 3am pages. Batch is cheap, simple, and restartable. So the real question isn’t “can we stream this?” — it’s “does the decision this data feeds actually change inside the latency window?”</p>
+      <h2>Stream when latency changes the outcome</h2>
+      <p>Fraud authorization at sub-500ms, patient-vitals alerting, dynamic pricing — here a five-minute delay isn’t a slower answer, it’s the <em>wrong</em> answer. The decision is gone by the time batch lands.</p>
+      <h2>Batch when freshness is a nicety</h2>
+      <p>Executive dashboards, monthly reconciliation, model training sets. Nobody makes a different decision because the number arrived at 6am instead of 6:05. Streaming here just buys you cost and fragility.</p>
+      <ul>
+        <li><b>Latency need under seconds?</b> → stream.</li>
+        <li><b>Minutes-to-hours acceptable?</b> → micro-batch (the comfortable middle — Structured Streaming with a trigger interval).</li>
+        <li><b>Daily is fine?</b> → batch, and sleep well.</li>
+      </ul>
+      <p>The most senior move in the room is often choosing <em>not</em> to stream.</p>` },
+
+    { id:'medallion', cat:'Architecture · Lakehouse', title:'Medallion Architecture, Plainly', read:'7 min', date:'2025.02.21',
+      cover:'linear-gradient(135deg,#e22424,#5a0a0a)',
+      excerpt:'Bronze, silver, gold — stripped of the architecture-astronaut jargon. It’s just three honest jobs for your data.',
+      body:`<p>Medallion sounds like ceremony. It isn’t. It’s a discipline that stops you from doing the one thing that kills data platforms: transforming raw data in place and losing the ability to reproduce anything.</p>
+      <h2>Bronze — land it raw</h2>
+      <p>Ingest exactly as the source sent it. No cleaning, no joins, no opinions. Append-only, schema-on-read, every field preserved. If everything downstream burns down, you can rebuild from bronze. That’s the whole point.</p>
+      <h2>Silver — make it trustworthy</h2>
+      <p>Now you clean: enforce types, dedupe, handle nulls, conform keys, apply data-quality rules. Silver is the layer analysts and data scientists actually build on — validated, queryable, joined to conformed dimensions but not yet shaped for any one consumer.</p>
+      <h2>Gold — shape it for use</h2>
+      <p>Business-level aggregates, star schemas, the specific tables a dashboard or feature pipeline consumes. Gold is opinionated and purpose-built. You can have many gold tables off one silver layer.</p>
+      <p>The magic isn’t the medals — it’s that every layer is reproducible from the one before it. Lineage, debuggability, and trust fall out of the structure for free.</p>` },
+  ];
+
+  /* ---------- Render blog grid ---------- */
+  function renderBlog(){
+    document.getElementById('blogGrid').innerHTML = POSTS.map(p=>`
+      <article class="post panel clip corner" data-post="${p.id}">
+        <div class="cover" style="background:${p.cover}"><span class="tagcat">${p.cat}</span></div>
+        <div class="body"><h3>${p.title}</h3><div class="ex">${p.excerpt}</div>
+          <div class="ft"><span>${p.date}</span><span class="read">${p.read} ▸</span></div></div>
+      </article>`).join('');
+  }
+  renderBlog();
+
+  /* ---------- Load live posts from Supabase via /api/posts ---------- */
+  const COVERS = ['linear-gradient(135deg,#ffb020,#7a4d00)','linear-gradient(135deg,#33e6e6,#0a4a4a)','linear-gradient(135deg,#e22424,#5a0a0a)','linear-gradient(135deg,#8a5cff,#2a1a5a)'];
+  async function loadPosts(){
+    try{
+      const r = await fetch('/api/posts');
+      if(!r.ok) return;                       // keep defaults if backend not live yet
+      const rows = await r.json();
+      if(!Array.isArray(rows) || !rows.length) return;
+      POSTS = rows.map((p,i)=>({
+        id: p.id,
+        cat: p.category || 'Field Note',
+        title: p.title,
+        excerpt: p.excerpt || '',
+        read: p.read_time || '',
+        date: (p.created_at||'').slice(0,10).replace(/-/g,'.'),
+        body: p.body || '',
+        cover: COVERS[i % COVERS.length]
+      }));
+      renderBlog();
+    }catch(e){ /* offline / not deployed — defaults stay */ }
+  }
+  loadPosts();
+
+  /* ---------- Render an article ---------- */
+  function openArticle(id){
+    const p = POSTS.find(x=>x.id===id); if(!p) return;
+    document.getElementById('articleBody').innerHTML = `
+      <a class="back" data-view="blog">◂ Back to archive</a>
+      <div class="a-cat">${p.cat}</div>
+      <h1>${p.title}</h1>
+      <div class="a-meta">${p.date}  //  ${p.read} read  //  by Harsha Reddy</div>
+      <div class="a-body">${p.body}</div>`;
+    showView('article');
+  }
+
+  /* ---------- View router ---------- */
+  function showView(v){
+    document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+    document.getElementById('view-'+v).classList.add('active');
+    document.querySelectorAll('.navlink').forEach(l=>l.classList.toggle('active', l.dataset.view===v && !l.dataset.scroll));
+    window.scrollTo({top:0, behavior:'instant' in window ? 'instant':'auto'});
+    document.getElementById('navlinks').classList.remove('open');
+  }
+
+  /* ---------- Global click handling ---------- */
+  document.addEventListener('click', (e)=>{
+    const nav = e.target.closest('[data-view]');
+    const post = e.target.closest('[data-post]');
+    if (post && !post.closest('[data-view]')){ openArticle(post.dataset.post); return; }
+    if (post){ openArticle(post.dataset.post); return; }
+    if (nav){
+      e.preventDefault();
+      const v = nav.dataset.view, scroll = nav.dataset.scroll;
+      showView(v);
+      if (scroll){ const t=document.getElementById(scroll); if(t) setTimeout(()=>t.scrollIntoView({behavior:'smooth'}),60); }
+    }
+  });
+
+  /* ---------- Mobile menu ---------- */
+  document.getElementById('menuBtn').addEventListener('click', ()=>document.getElementById('navlinks').classList.toggle('open'));
+
+  /* ---------- Reveal ---------- */
+  const io = new IntersectionObserver((es)=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}}),{threshold:.12});
+  function bindReveal(){ document.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el)); }
+  bindReveal();
+
+  /* ---------- Modal + submit (STUB → backend later) ---------- */
+  const back=document.getElementById('modalBack');
+  const open=()=>{back.classList.add('show');document.getElementById('cName').focus();};
+  const close=()=>back.classList.remove('show');
+  document.getElementById('openConnect').addEventListener('click',open);
+  document.getElementById('modalClose').addEventListener('click',close);
+  document.getElementById('modalCancel').addEventListener('click',close);
+  back.addEventListener('click',e=>{if(e.target===back)close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+  const toast=document.getElementById('toast');let tt;
+  const showToast=m=>{toast.textContent=m;toast.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('show'),3200);};
+  document.getElementById('modalSend').addEventListener('click',async ()=>{
+    const name=cName.value.trim(),email=cEmail.value.trim(),message=cMsg.value.trim();
+    if(!name||!email||!message)return showToast('// all fields required');
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return showToast('// invalid frequency');
+    showToast('// transmitting...');
+    try{
+      const r = await fetch('/api/connect',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name,email,message})
+      });
+      if(!r.ok) throw new Error('bad');
+      close();showToast('// signal received');
+      cName.value=cEmail.value=cMsg.value='';
+    }catch(err){
+      showToast('// transmission failed — try again');
+    }
+  });
+</script>
+</body>
+</html>

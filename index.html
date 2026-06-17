@@ -97,7 +97,8 @@
   .reveal.in{opacity:1;transform:none;}
 
   /* ---------- HERO ---------- */
-  .hero{min-height:100vh;display:flex;align-items:center;padding-top:64px;position:relative;}
+  .hero{min-height:100vh;display:flex;align-items:center;padding:120px 0 80px;position:relative;}
+  @media (max-height:780px){.hero{align-items:flex-start;}}
   .hero-inner{position:relative;z-index:1;}
   .hero .tag{font-family:var(--mono);font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:18px;}
   .hero .tag .b{color:var(--gold);}
